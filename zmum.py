@@ -66,30 +66,26 @@ def get_text_length(text):
     return np.array([len(x) for x in text]).reshape(-1, 1)
 
 pipeline = Pipeline([
-    ('features', FeatureUnion([
-        ('text', Pipeline([
-            ('vectorizer', CountVectorizer(min_df=1,max_df=2)),
-            ('tfidf', TfidfTransformer()),
-        ])),
-        ('length', Pipeline([
-            ('count', FunctionTransformer(get_text_length, validate=False)),
-        ]))
-    ])),
-    # ('bow', CountVectorizer(analyzer=text_processor)),  # strings to token integer counts
-    # ('tfidf', TfidfTransformer()),  # integer counts to weighted TF-IDF scores
+    # ('features', FeatureUnion([
+    #     ('text', Pipeline([
+    #         ('vectorizer', CountVectorizer(min_df=1,max_df=2)),
+    #         ('tfidf', TfidfTransformer()),
+    #     ])),
+    #     ('length', Pipeline([
+    #         ('count', FunctionTransformer(get_text_length, validate=False)),
+    #     ]))
+    # ])),
+    ('bow', CountVectorizer(analyzer=text_processor)),  # strings to token integer counts
+    ('tfidf', TfidfTransformer()),  # integer counts to weighted TF-IDF scores
     ('classifier', MultinomialNB()),  # train on TF-IDF vectors w/ Naive Bayes classifier
 ])
 
 #%%
-from imblearn.over_sampling import RandomOverSampler
-msg_train, msg_test, label_train, label_test = train_test_split(raw_df.loc[:, ['opinion']], raw_df['rate'], test_size=0.2)
-msg_train, label_train = RandomOverSampler().fit_resample(msg_train, label_train)
-msg_train = msg_train.opinion
-msg_test = msg_test.opinion
-pipeline.fit(msg_train, label_train)
+msg_train, msg_test, label_train, label_test = train_test_split(raw_df['opinion'], raw_df['rate'], test_size=0.2)
+pipeline.fit(msg_train,label_train)
 predictions = pipeline.predict(msg_test)
-print(classification_report(predictions, label_test))
-print(confusion_matrix(predictions, label_test))
-print(accuracy_score(predictions, label_test))
+print(classification_report(predictions,label_test))
+print(confusion_matrix(predictions,label_test))
+print(accuracy_score(predictions,label_test))
 
 # %%
