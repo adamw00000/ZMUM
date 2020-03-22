@@ -29,8 +29,8 @@ def remove_punctuation(text):
     text_blob = TextBlob(text)
     return ' '.join(text_blob.words)
 
-print(remove_punctuation(raw_df['opinion'].iloc[10]))
-print(raw_df['opinion'].iloc[10])
+print(remove_punctuation(raw_df['opinion'].iloc[63]))
+print(raw_df['opinion'].iloc[63])
 
 #%%
 def remove_numbers_symbols_stopwords(text):
