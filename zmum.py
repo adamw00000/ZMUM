@@ -1,16 +1,16 @@
-#%%
+# %%
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-#Data Preprocessing and Feature Engineering
+# Data Preprocessing and Feature Engineering
 from textblob import TextBlob
 import re
 from nltk.corpus import stopwords
 from nltk.stem.wordnet import WordNetLemmatizer
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 
-#Model Selection and Validation
+# Model Selection and Validation
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
@@ -21,10 +21,10 @@ nltk.download('punkt')
 nltk.download('stopwords')
 nltk.download('wordnet')
 
-#%%
+# %%
 raw_df = pd.read_csv('Train.csv', sep = ';')
 
-#%%
+# %%
 def remove_punctuation(text):
     text_blob = TextBlob(text)
     return ' '.join(text_blob.words)
@@ -32,7 +32,7 @@ def remove_punctuation(text):
 print(remove_punctuation(raw_df['opinion'].iloc[63]))
 print(raw_df['opinion'].iloc[63])
 
-#%%
+# %%
 def remove_numbers_symbols_stopwords(text):
     word_list = [ele for ele in text.split() if ele != 'user']
     clean_tokens = [t for t in word_list if re.match(r'[^\W\d]*$', t)]
@@ -54,7 +54,7 @@ def normalization(word_list):
 word_list = 'I was playing with my friends with whom I used to play, when you called me yesterday'.split()
 print(normalization(word_list))
 
-#%%
+# %%
 import numpy as np
 from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.preprocessing import FunctionTransformer
@@ -80,8 +80,13 @@ pipeline = Pipeline([
     ('classifier', MultinomialNB()),  # train on TF-IDF vectors w/ Naive Bayes classifier
 ])
 
-#%%
+# %%
+vectorizer = CountVectorizer(analyzer=text_processor)
+print(vectorizer.fit_transform(raw_df['opinion'].iloc[:2]))
+
+# %%
 msg_train, msg_test, label_train, label_test = train_test_split(raw_df['opinion'], raw_df['rate'], test_size=0.2)
+
 pipeline.fit(msg_train,label_train)
 predictions = pipeline.predict(msg_test)
 print(classification_report(predictions,label_test))
@@ -89,3 +94,17 @@ print(confusion_matrix(predictions,label_test))
 print(accuracy_score(predictions,label_test))
 
 # %%
+all_words = nltk.FreqDist(w.lower() for w in msg_train.words())
+word_features = list(all_words)[:2000]
+
+def document_features(document):
+    document_words = set(document)
+    features = {}
+    for word in word_features:
+        features['contains({})'.format(word)] = (word in document_words)
+    return features
+
+# Train Naive Bayes classifier
+featuresets = [(document_features(d), c) for (d,c) in documents]
+train_set, test_set = featuresets[100:], featuresets[:100]
+classifier = nltk.NaiveBayesClassifier.train(train_set)

@@ -3,6 +3,8 @@ import pandas as pd
 import numpy as np
 
 df = pd.read_csv('no_abbreviations_Train.csv')
+df['name'] = df['name'].astype("category").cat.codes.values
+df['condition'] = df['condition'].astype("category").cat.codes.values
 
 # %%
 from time import time
@@ -13,15 +15,17 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.naive_bayes import BernoulliNB
 from sklearn.linear_model import Ridge
 
+from scipy.sparse import hstack
+
 # %%
 from sklearn.model_selection import train_test_split
 
 msg_train, msg_test, label_train, label_test = \
-    train_test_split(df['opinion'], df['rate'], \
+    train_test_split(df[['name', 'condition', 'opinion']], df['rate'], \
     test_size=0.2)
 
-msg_train.to_csv("corpus_train.txt", index=False)
-msg_test.to_csv("corpus_test.txt", index=False)
+msg_train.opinion.to_csv("corpus_train.txt", index=False)
+msg_test.opinion.to_csv("corpus_test.txt", index=False)
 
 corpus_train = open('corpus_train.txt', 'r', encoding='utf8')
 corpus_test = open('corpus_test.txt', 'r', encoding='utf8')
@@ -38,6 +42,12 @@ def scoresOnCV(model, wordvec, description):
 vectorizer = CountVectorizer(stop_words = 'english', min_df=0.001)
 wordvec_train = vectorizer.fit_transform(corpus_train)
 wordvec_test = vectorizer.transform(corpus_test)
+wordvec_train = hstack((wordvec_train, \
+        msg_train.condition.values[:,None], \
+        msg_train.name.values[:,None]))
+wordvec_test = hstack((wordvec_test, \
+        msg_test.condition.values[:,None], \
+        msg_test.name.values[:,None]))
 
 print("dimension of the word count vector is (%d, %d)"\
     %(wordvec_train.shape[0], wordvec_train.shape[1]))
@@ -61,6 +71,12 @@ corpus_test = open('corpus_test.txt', 'r', encoding='utf8')
 vectorizer = CountVectorizer(stop_words = 'english', min_df=0.01)
 wordvec_train = vectorizer.fit_transform(corpus_train)
 wordvec_test = vectorizer.transform(corpus_test)
+wordvec_train = hstack((wordvec_train, \
+        msg_train.condition.values[:,None], \
+        msg_train.name.values[:,None]))
+wordvec_test = hstack((wordvec_test, \
+        msg_test.condition.values[:,None], \
+        msg_test.name.values[:,None]))
 
 print("dimension of the word count vector is (%d, %d)"\
     %(wordvec_train.shape[0], wordvec_train.shape[1]))
@@ -79,6 +95,12 @@ corpus_test = open('corpus_test.txt', 'r', encoding='utf8')
 vectorizer = CountVectorizer(stop_words = 'english', min_df=0.000005)
 wordvec_train = vectorizer.fit_transform(corpus_train)
 wordvec_test = vectorizer.transform(corpus_test)
+wordvec_train = hstack((wordvec_train, \
+        msg_train.condition.values[:,None], \
+        msg_train.name.values[:,None]))
+wordvec_test = hstack((wordvec_test, \
+        msg_test.condition.values[:,None], \
+        msg_test.name.values[:,None]))
 
 print("dimension of the word count vector is (%d, %d)"\
     %(wordvec_train.shape[0], wordvec_train.shape[1]))
@@ -97,6 +119,12 @@ corpus_test = open('corpus_test.txt', 'r', encoding='utf8')
 vectorizer = CountVectorizer(stop_words = 'english', min_df=0.000005)
 wordvec_train = vectorizer.fit_transform(corpus_train)
 wordvec_test = vectorizer.transform(corpus_test)
+wordvec_train = hstack((wordvec_train, \
+        msg_train.condition.values[:,None], \
+        msg_train.name.values[:,None]))
+wordvec_test = hstack((wordvec_test, \
+        msg_test.condition.values[:,None], \
+        msg_test.name.values[:,None]))
 
 logistic_clf = LogisticRegression(multi_class='multinomial', solver='sag', max_iter=300) 
 logistic_clf.fit(wordvec_train, label_train)
